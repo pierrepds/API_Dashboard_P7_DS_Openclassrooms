@@ -51,3 +51,16 @@ def scoring(Credit_ID: int):
     score = get_score(prob)
     result = {'probability': prob, 'score': score}
     return result
+
+# New calculation of probability and score by changing some features value
+@app.get("/custom_scoring")
+def custom_scoring(Credit_ID: int, new_ann: float, new_amt: float):
+    data = select_data(Credit_ID)
+    data.loc[Credit_ID, 'AMT_ANNUITY'] = new_ann
+    amt_income = info_df.loc[Credit_ID, 'AMT_INCOME_TOTAL']
+    data['ANNUITY_INCOME_PERC'] = new_ann / amt_income
+    data['PAYMENT_RATE'] = new_ann / new_amt
+    prob = (model.predict_proba(data))[0][1]
+    score = get_score(prob)
+    result = {'probability': prob, 'score': score}
+    return result
