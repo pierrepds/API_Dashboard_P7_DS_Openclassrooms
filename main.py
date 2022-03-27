@@ -8,7 +8,10 @@ Created on Sat Mar 26 20:56:03 2022
 # Import useful package
 from fastapi import FastAPI
 import joblib
+import shap
+import json
 import pandas as pd
+import numpy as np
 
 # Creation of the API
 app = FastAPI()
@@ -91,3 +94,14 @@ def feat_imp(Credit_ID: int):
               'feat_pos_1':feat_pos_1, 'ratio_pos_1':ratio_pos_1,
               'feat_pos_2':feat_pos_2, 'ratio_pos_2':ratio_pos_2}
     return result
+
+# Return the list of scores for the test sample
+@app.get("/score_values_distribution")
+def scr_dist():
+    scr_idx = list(df.index)
+    proba_ls = list(model.predict_proba(df)[:,1])
+    scr_ls = [get_score(proba) for proba in proba_ls]
+    result = {'index':json.dumps(scr_idx),
+              'scores':json.dumps(scr_ls)}
+    return result
+    
