@@ -55,6 +55,23 @@ def score_dis():
 
 # Construction of the Dashboard
 # Title
-
 st.image('Images/Titre.png', use_column_width='always')
 
+# Sidebar
+id_client = st.sidebar.selectbox('Sélection de l\'identifiant du crédit:',
+                                 df_test.index)
+st.sidebar.markdown('#')
+
+info_col = st.sidebar.multiselect('Information du client à afficher',
+                                  infos.keys(),
+                                  default=['Type de crédit',
+                                           'Montant du crédit',
+                                           'Montant des annuités']
+                                  )
+
+st.sidebar.table(info_df.astype(str).loc[id_client,
+                                         [infos[key] for key in info_col]])
+
+analyse = st.sidebar.radio('Analyse',
+                           ['Modification valeurs', 'Analyse global',
+                            'Analyse locale', 'Analyse bivariée'])
