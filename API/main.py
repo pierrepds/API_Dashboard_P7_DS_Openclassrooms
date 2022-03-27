@@ -22,11 +22,11 @@ async def root():
     return{'message':'API Credit Scoring'}
 
 # Import model and datas
-model_dict = joblib.load('data/model_dict.joblib')
+model_dict = joblib.load('../data/model_dict.joblib')
 model = model_dict['model']
 features = model_dict['features']
-df = pd.read_csv('data/X_test.csv', index_col='SK_ID_CURR')
-info_df = pd.read_csv('data/info.csv', index_col='SK_ID_CURR')
+df = pd.read_csv('../data/X_test.csv', index_col='SK_ID_CURR')
+info_df = pd.read_csv('../data/info.csv', index_col='SK_ID_CURR')
 
 # Return information on one credit from its ID in pd.DataFrame format
 def select_data(index):
