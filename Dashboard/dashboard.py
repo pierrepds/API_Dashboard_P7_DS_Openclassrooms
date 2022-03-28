@@ -35,7 +35,7 @@ def scoring(Credit_ID: int):
     return response
 
 def custom_scoring(Credit_ID: int, new_ann, new_amt):
-    r = requests.get('https://rocdsp7-api-pp.herokuapp.com/custom_scoring',
+    r = requests.get('https://ocdsp7-api-pp.herokuapp.com/custom_scoring',
                      {'Credit_ID':Credit_ID,
                       'new_ann':new_ann,
                       'new_amt':new_amt}
@@ -81,3 +81,19 @@ st.header('Résultat de la simulation')
 st.markdown('##')
 score = scoring(id_client)['score']
 st.image(f'Images/ScoreIm{score}.png', use_column_width='always')
+
+# Custom results by changing annuity and credit amount
+if analyse == 'Modification valeurs':
+    st.header('Modification Annuités / Montant du crédit')
+    col1, col2 = st.columns(2)
+    new_annuity = col1.slider('Changer la valeur des annuités',
+                              max_value=int(2*df_test.loc[id_client,
+                                                          'AMT_ANNUITY']),
+                              value=int(df_test.loc[id_client, 'AMT_ANNUITY']))
+    new_amount = col1.slider('Changer la valeur du montant du crédit',
+                              max_value=int(2*info_df.loc[id_client,
+                                                          'AMT_CREDIT']),
+                              value=int(info_df.loc[id_client, 'AMT_CREDIT']))
+    custom_score = custom_scoring(id_client, new_annuity, new_amount)['score']
+    col2.markdown('##')
+    col2.image(f'Images/Score{custom_score}.png')
