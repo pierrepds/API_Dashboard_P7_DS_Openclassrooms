@@ -29,13 +29,13 @@ infos = {'Montant du crédit':'AMT_CREDIT',
 # Get response from API
 @st.cache
 def scoring(Credit_ID: int):
-    r = requests.get('https://rocky-tundra-36789.herokuapp.com/scoring',
+    r = requests.get('https://ocdsp7-api-pp.herokuapp.com/scoring',
                      {'Credit_ID':Credit_ID})
     response = r.json()
     return response
 
 def custom_scoring(Credit_ID: int, new_ann, new_amt):
-    r = requests.get('https://rocky-tundra-36789.herokuapp.com/custom_scoring',
+    r = requests.get('https://rocdsp7-api-pp.herokuapp.com/custom_scoring',
                      {'Credit_ID':Credit_ID,
                       'new_ann':new_ann,
                       'new_amt':new_amt}
@@ -43,9 +43,9 @@ def custom_scoring(Credit_ID: int, new_ann, new_amt):
     response = r.json()
     return response
 
-
+@st.cache
 def score_dis():
-    r = requests.get('https://rocky-tundra-36789.herokuapp.com/'
+    r = requests.get('https://ocdsp7-api-pp.herokuapp.com/'
                      'score_values_distribution')
     response = r.json()
     scr_df = pd.DataFrame(json.loads(response['scores']),
@@ -75,3 +75,9 @@ st.sidebar.table(info_df.astype(str).loc[id_client,
 analyse = st.sidebar.radio('Analyse',
                            ['Modification valeurs', 'Analyse global',
                             'Analyse locale', 'Analyse bivariée'])
+
+# Visualisation of scoring results
+st.header('Résultat de la simulation')
+st.markdown('##')
+score = scoring(id_client)['score']
+st.image(f'Images/ScoreIm{score}.png', use_column_width='always')
