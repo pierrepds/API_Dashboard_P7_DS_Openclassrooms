@@ -79,16 +79,15 @@ def feat_imp(Credit_ID: int):
                                columns=features)
     local_sv = expl.shap_values(pd.DataFrame(df_trans.loc[Credit_ID]).T)[1][0]
     sort_idx = np.argsort(local_sv)
-    neg_val = np.sum([sv for sv in local_sv if sv<0])
-    pos_val = np.sum([sv for sv in local_sv if sv>0])
+    sum_abs_val = np.sum([abs(sv) for sv in local_sv])
     feat_neg_1 = features[sort_idx[0]]
-    ratio_neg_1 = local_sv[sort_idx[0]] / neg_val
+    ratio_neg_1 = abs(local_sv[sort_idx[0]]) / sum_abs_val
     feat_neg_2 = features[sort_idx[1]]
-    ratio_neg_2 = local_sv[sort_idx[1]] / neg_val
+    ratio_neg_2 = abs(local_sv[sort_idx[1]]) / sum_abs_val
     feat_pos_1 = features[sort_idx[-1]]
-    ratio_pos_1 = local_sv[sort_idx[-1]] / pos_val
+    ratio_pos_1 = abs(local_sv[sort_idx[-1]]) / sum_abs_val
     feat_pos_2 = features[sort_idx[-2]]
-    ratio_pos_2 = local_sv[sort_idx[-2]] / pos_val
+    ratio_pos_2 = abs(local_sv[sort_idx[-2]]) / sum_abs_val
     result = {'feat_neg_1':feat_neg_1, 'ratio_neg_1':ratio_neg_1,
               'feat_neg_2':feat_neg_2, 'ratio_neg_2':ratio_neg_2,
               'feat_pos_1':feat_pos_1, 'ratio_pos_1':ratio_pos_1,

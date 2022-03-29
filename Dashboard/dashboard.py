@@ -28,6 +28,7 @@ infos = {'Montant du crédit':'AMT_CREDIT',
          'Dettes totales sur crédit en cours':'BURO_AMT_CREDIT_SUM_DEBT_SUM'
          }
 
+# Construction of functions
 # Get response from API
 @st.cache
 def scoring(Credit_ID: int):
@@ -54,6 +55,167 @@ def score_dis():
                           index=json.loads(response['index']),
                           columns=['score'])
     return scr_df
+
+@st.cache
+def feat_imp(Credit_ID: int):
+    r = requests.get('https://ocdsp7-api-pp.herokuapp.com/local_feat_imp',
+                     {'Credit_ID':Credit_ID})
+    response = r.json()
+    return response
+
+# Distribution visualization
+def dist_viz(data, id_credit, feature):
+    scr_df = score_dis()
+    df = data[feature]
+    color = ['g', 'greenyellow', 'navajowhite', 'orange']
+
+    # Distribution of missing values if value is missing
+    if np.isnan(data.loc[id_credit, feature]):
+        nb_nan = np.isnan(df).sum()
+        nb_notnan = len(df) - nb_nan
+        fig = plt.figure(figsize=(4,3))
+        for scr, clr in zip([1, 2, 3, 4], color):
+          sample = df.loc[scr_df.loc[df.index, 'score'] == scr]
+          nan_nb = np.isnan(sample).sum() / nb_nan
+          notnan_nb = (len(sample) - np.isnan(sample).sum()) / nb_notnan
+          plt.bar([0.76 + ((scr-1) * 0.16), 1.76 + ((scr-1) * 0.16)],
+                  [nan_nb, notnan_nb],
+                  label=f'score = {scr}',
+                  width=0.12,
+                  color=clr
+                  )
+        plt.hlines(y=1, xmin=0.65, xmax=1.35, color='b', lw=2,
+                    label=f'credit n°{id_credit}')
+        plt.vlines(x=0.65, ymin=0, ymax=1, color='b', lw=2)
+        plt.vlines(x=1.35, ymin=0, ymax=1, color='b', lw=2)
+        plt.title('Distribution des scores\nValeurs manquantes',
+                  fontsize=16, fontweight=650)
+        plt.ylabel('Distribution', fontsize=14)
+        plt.xticks([1,2], ['NaN', 'not NaN'])
+        plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
+
+    else:
+        # Distribution visualization as bar if the feature is discrete
+        if len(df.unique()) < 20:
+            df.dropna(inplace=True)
+            values = np.sort(df.unique())
+            nb_values = len(values)
+            value_client = df[id_credit]
+            idx_client = np.where(values == value_client)[0][0]
+            fig = plt.figure(figsize=(2*nb_values, 3))
+            count = df.value_counts()
+            for scr, clr in zip([1, 2, 3, 4], color):
+                sample = df.loc[scr_df.loc[df.index, 'score'] == scr]
+                val_cnt = sample.value_counts()
+                y = []
+                for val in values:
+                    if val in val_cnt.index:
+                        y.append(val_cnt[val]/count[val])
+                    else:
+                        y.append(0)
+                plt.bar(np.arange(0.76 + ((scr-1) * 0.16),
+                                  nb_values + 0.76 + ((scr-1) * 0.16),
+                                  1),
+                        y,
+                        label=f'score = {scr}',
+                        width=0.12,
+                        color=clr
+                        )
+            plt.hlines(y=1,
+                       xmin=0.65 + idx_client,
+                       xmax=1.35 + idx_client,
+                       color='b', lw=2,
+                       label=f'credit n°{id_credit}')
+            plt.vlines(x=0.65 + idx_client, ymin=0, ymax=1, color='b', lw=2)
+            plt.vlines(x=1.35 + idx_client, ymin=0, ymax=1, color='b', lw=2)
+            plt.title('Distribution des scores\nVariable discrète',
+                      fontsize=16, fontweight=650)
+            plt.ylabel('Distribution', fontsize=14)
+            plt.xticks(range(1, 1+nb_values), values)
+            plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
+
+        # Distribution plot for continous features
+        # Different ploting in fonction of values distribution
+        else:
+            df.dropna(inplace=True)
+            nb_values = len(df.unique())
+    
+            # In case of small amount of unique values (almost discrete)
+            if (nb_values <= 1000 
+                and df.value_counts().iloc[0] < 1.5*len(df)/(nb_values)):
+                out, bins = pd.qcut(df, nb_values/2,
+                                    labels=False, retbins=True)
+                X = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
+                fig = plt.figure()
+                for scr, clr in zip([1, 2, 3, 4], color):
+                    y=[]
+                    for i, count in zip(np.unique(out, return_counts=True)[0],
+                                        np.unique(out, return_counts=True)[1]):
+                        score_list = scr_df.loc[df[out == i].index]
+                        ratio_score = score_list.value_counts()
+                        if scr in ratio_score.index:
+                            y.append(ratio_score[scr]/count)
+                        else:
+                            y.append(0)
+                    plt.plot(X, y, c=clr, label=f'score = {scr}')
+                plt.axvline(x=df[id_credit], ymin=0, ymax=1,
+                           color='b', lw=2, label=f'credit n°{id_credit}')
+                plt.title('Distribution des scores\nVariable continue',
+                          fontsize=16, fontweight=650)
+                plt.ylabel('Distribution', fontsize=14)
+                plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
+
+            # In case of multiple unique values well distributed    
+            elif (nb_values > 1000
+                  and df.value_counts().iloc[0] < 1.5*len(df)/(nb_values/100)):
+                out, bins = pd.qcut(df, int(nb_values / 100),
+                                    labels=False, retbins=True)
+                X = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
+                fig = plt.figure()
+                for scr, clr in zip([1, 2, 3, 4], color):
+                    y=[]
+                    for i, count in zip(np.unique(out, return_counts=True)[0],
+                                        np.unique(out, return_counts=True)[1]):
+                        score_list = scr_df.loc[df[out == i].index]
+                        ratio_score = score_list.value_counts()
+                        if scr in ratio_score.index:
+                            y.append(ratio_score[scr]/count)
+                        else:
+                            y.append(0)
+                    plt.plot(X, y, c=clr, label=f'score = {scr}')
+                plt.axvline(x=df[id_credit], ymin=0, ymax=1,
+                           color='b', lw=2, label=f'credit n°{id_credit}')
+                plt.title('Distribution des scores\nVariable continue',
+                          fontsize=16, fontweight=650)
+                plt.ylabel('Distribution', fontsize=14)
+                plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
+
+            # In case of imbalanced distribution    
+            else:
+                out, bins = pd.cut(df, 50, labels=False, retbins=True)
+                X = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
+                fig = plt.figure()
+                for scr, clr in zip([1, 2, 3, 4], color):
+                    y=[]
+                    for i in range(len(X)):
+                        if i in np.unique(out):
+                            count = np.sum(list(out == i))
+                            score_list = scr_df.loc[df[out == i].index]
+                            ratio_score = score_list.value_counts()
+                            if scr in ratio_score.index:
+                                y.append(ratio_score[scr]/count)
+                            else:
+                                y.append(0)
+                        else:
+                            y.append(0)
+                    plt.plot(X, y, c=clr, label=f'score = {scr}')
+                plt.axvline(x=df[id_credit], ymin=0, ymax=1,
+                           color='b', lw=2, label=f'credit n°{id_credit}')
+                plt.title('Distribution des scores\nVariable continue',
+                          fontsize=16, fontweight=650)
+                plt.ylabel('Distribution', fontsize=14)
+                plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
+    return fig
 
 # Construction of the Dashboard
 # Title
@@ -115,157 +277,47 @@ if analyse == 'Analyse global':
     feature = st.selectbox('Sélection de la variable à visualiser:',
                            important_features)
 
-    scr_df = score_dis()
-    df = df_test[feature]
-    color = ['g', 'greenyellow', 'navajowhite', 'orange']
-
-    # Distribution of missing values if value is missing
-    if np.isnan(df_test.loc[id_client, feature]):
-        nb_nan = np.isnan(df).sum()
-        nb_notnan = len(df) - nb_nan
-        fig = plt.figure(figsize=(4,3))
-        for scr, clr in zip([1, 2, 3, 4], color):
-          sample = df.loc[scr_df.loc[df.index, 'score'] == scr]
-          nan_nb = np.isnan(sample).sum() / nb_nan
-          notnan_nb = (len(sample) - np.isnan(sample).sum()) / nb_notnan
-          plt.bar([0.76 + ((scr-1) * 0.16), 1.76 + ((scr-1) * 0.16)],
-                  [nan_nb, notnan_nb],
-                  label=f'score = {scr}',
-                  width=0.12,
-                  color=clr
-                  )
-        plt.hlines(y=1, xmin=0.65, xmax=1.35, color='b', lw=2,
-                    label=f'credit n°{id_client}')
-        plt.vlines(x=0.65, ymin=0, ymax=1, color='b', lw=2)
-        plt.vlines(x=1.35, ymin=0, ymax=1, color='b', lw=2)
-        plt.title('Distribution des scores\nValeurs manquantes',
-                  fontsize=16, fontweight=650)
-        plt.ylabel('Distribution', fontsize=14)
-        plt.xticks([1,2], ['NaN', 'not NaN'])
-        plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
-        st.pyplot(fig)
-
-    else:
-        # Distribution visualization as bar if the feature is discrete
-        if len(df.unique()) < 20:
-            df.dropna(inplace=True)
-            values = np.sort(df.unique())
-            nb_values = len(values)
-            value_client = df[id_client]
-            idx_client = np.where(values == value_client)[0][0]
-            fig = plt.figure(figsize=(2*nb_values, 3))
-            count = df.value_counts()
-            for scr, clr in zip([1, 2, 3, 4], color):
-                sample = df.loc[scr_df.loc[df.index, 'score'] == scr]
-                val_cnt = sample.value_counts()
-                y = []
-                for val in values:
-                    if val in val_cnt.index:
-                        y.append(val_cnt[val]/count[val])
-                    else:
-                        y.append(0)
-                plt.bar(np.arange(0.76 + ((scr-1) * 0.16),
-                                  nb_values + 0.76 + ((scr-1) * 0.16),
-                                  1),
-                        y,
-                        label=f'score = {scr}',
-                        width=0.12,
-                        color=clr
-                        )
-            plt.hlines(y=1,
-                       xmin=0.65 + idx_client,
-                       xmax=1.35 + idx_client,
-                       color='b', lw=2,
-                       label=f'credit n°{id_client}')
-            plt.vlines(x=0.65 + idx_client, ymin=0, ymax=1, color='b', lw=2)
-            plt.vlines(x=1.35 + idx_client, ymin=0, ymax=1, color='b', lw=2)
-            plt.title('Distribution des scores\nVariable discrète',
-                      fontsize=16, fontweight=650)
-            plt.ylabel('Distribution', fontsize=14)
-            plt.xticks(range(1, 1+nb_values), values)
-            plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
-            st.pyplot(fig)
-
-        # Distribution plot for continous features
-        # Different ploting in fonction of values distribution
-        else:
-            df.dropna(inplace=True)
-            nb_values = len(df.unique())
-
-            # In case of small amount of unique values (almost discrete)
-            if (nb_values <= 1000 
-                and df.value_counts().iloc[0] < 2*len(df)/(nb_values)):
-                out, bins = pd.qcut(df, nb_values/2,
-                                    labels=False, retbins=True)
-                X = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
-                fig = plt.figure()
-                for scr, clr in zip([1, 2, 3, 4], color):
-                    y=[]
-                    for i, count in zip(np.unique(out, return_counts=True)[0],
-                                        np.unique(out, return_counts=True)[1]):
-                        score_list = scr_df.loc[df[out == i].index]
-                        ratio_score = score_list.value_counts()
-                        if scr in ratio_score.index:
-                            y.append(ratio_score[scr]/count)
-                        else:
-                            y.append(0)
-                    plt.plot(X, y, c=clr, label=f'score = {scr}')
-                plt.axvline(x=df[id_client], ymin=0, ymax=1,
-                           color='b', lw=2, label=f'credit n°{id_client}')
-                plt.title('Distribution des scores\nVariable continue',
-                          fontsize=16, fontweight=650)
-                plt.ylabel('Distribution', fontsize=14)
-                plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
-                st.pyplot(fig)
-
-            # In case of multiple unique values well distributed    
-            elif (nb_values > 1000
-                  and df.value_counts().iloc[0] < 2*len(df)/(nb_values/100)):
-                out, bins = pd.qcut(df, int(nb_values / 100),
-                                    labels=False, retbins=True)
-                X = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
-                fig = plt.figure()
-                for scr, clr in zip([1, 2, 3, 4], color):
-                    y=[]
-                    for i, count in zip(np.unique(out, return_counts=True)[0],
-                                        np.unique(out, return_counts=True)[1]):
-                        score_list = scr_df.loc[df[out == i].index]
-                        ratio_score = score_list.value_counts()
-                        if scr in ratio_score.index:
-                            y.append(ratio_score[scr]/count)
-                        else:
-                            y.append(0)
-                    plt.plot(X, y, c=clr, label=f'score = {scr}')
-                plt.axvline(x=df[id_client], ymin=0, ymax=1,
-                           color='b', lw=2, label=f'credit n°{id_client}')
-                plt.title('Distribution des scores\nVariable continue',
-                          fontsize=16, fontweight=650)
-                plt.ylabel('Distribution', fontsize=14)
-                plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
-                st.pyplot(fig)
-            # In case of imbalanced distribution    
-            else:
-                out, bins = pd.cut(df, 50, labels=False, retbins=True)
-                X = [(bins[i]+bins[i+1])/2 for i in range(len(bins)-1)]
-                fig = plt.figure()
-                for scr, clr in zip([1, 2, 3, 4], color):
-                    y=[]
-                    for i in range(len(X)):
-                        if i in np.unique(out):
-                            count = np.sum(list(out == i))
-                            score_list = scr_df.loc[df[out == i].index]
-                            ratio_score = score_list.value_counts()
-                            if scr in ratio_score.index:
-                                y.append(ratio_score[scr]/count)
-                            else:
-                                y.append(0)
-                        else:
-                            y.append(0)
-                    plt.plot(X, y, c=clr, label=f'score = {scr}')
-                plt.axvline(x=df[id_client], ymin=0, ymax=1,
-                           color='b', lw=2, label=f'credit n°{id_client}')
-                plt.title('Distribution des scores\nVariable continue',
-                          fontsize=16, fontweight=650)
-                plt.ylabel('Distribution', fontsize=14)
-                plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
-                st.pyplot(fig)
+    fig = dist_viz(data=df_test, id_credit=id_client, feature=feature)
+    st.pyplot(fig)
+    
+# Visualize sample distribution for the most important local features
+if analyse == 'Analyse locale':
+    st.header('Analyse locale du modèle: ')
+    local_imp = feat_imp(id_client)
+    st.subheader('Principales raisons de refus:')
+    col1, col2 = st.columns(2)
+    col1.markdown('Cause du refus n°1: {}'
+                 ''.format(local_imp['feat_pos_1']))
+    col1.markdown('Proportion de la variable dans le refus: {}%'
+                 ''.format(round(local_imp['ratio_pos_1']*100, 1)))
+    fig = dist_viz(data=df_test,
+                   id_credit=id_client,
+                   feature=local_imp['feat_pos_1'])
+    col1.pyplot(fig)
+    col2.markdown('Cause du refus n°2: {}'
+                 ''.format(local_imp['feat_pos_2']))
+    col2.markdown('Proportion de la variable dans le refus: {}%'
+                 ''.format(round(local_imp['ratio_pos_2']*100, 1)))
+    fig = dist_viz(data=df_test,
+                   id_credit=id_client,
+                   feature=local_imp['feat_pos_2'])
+    col2.pyplot(fig)
+    
+    st.subheader('Principales raisons d\'accord:')
+    col1, col2 = st.columns(2)
+    col1.markdown('Cause d\'accord n°1: {}'
+                 ''.format(local_imp['feat_neg_1']))
+    col1.markdown('Proportion de la variable dans l\'accord: {}%'
+                 ''.format(round(local_imp['ratio_neg_1']*100, 1)))
+    fig = dist_viz(data=df_test,
+                   id_credit=id_client,
+                   feature=local_imp['feat_neg_1'])
+    col1.pyplot(fig)
+    col2.markdown('Cause d\'accord n°2: {}'
+                 ''.format(local_imp['feat_neg_2']))
+    col2.markdown('Proportion de la variable dans l\'accord: {}%'
+                 ''.format(round(local_imp['ratio_neg_2']*100, 1)))
+    fig = dist_viz(data=df_test,
+                   id_credit=id_client,
+                   feature=local_imp['feat_neg_2'])
+    col2.pyplot(fig)
