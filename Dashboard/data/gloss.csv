@@ -1,0 +1,33 @@
+,description
+CODE_GENDER,"Sexe du Client (0 = Masculin, 1= Féminin)"
+FLAG_OWN_CAR,"Est-ce que le client possède une voiture? (0 = Non, 1 = Oui)"
+NAME_EDUCATION_TYPE_Higher education,"Est-ce que le plus haut diplôme du client est un diplôme de l'enseignement supérieur? (0 = Non, 1 = Oui)"
+REGION_RATING_CLIENT_W_CITY,Notation interne de la région où vit le client en prenant en compte la ville dans laquelle il réside (1 = meilleure note / 3 = plus mauvaise note)
+NAME_FAMILY_STATUS_Married,"Est-ce que le client est marié? (0 = Non, 1 = Oui)"
+PAYMENT_RATE,Fraction du crédit remboursée chaque année (ratio annuité sur montant total du crédit)
+EXT_SOURCE_2,Score normalisé provenant d'une source extérieure
+EXT_SOURCE_3,Score normalisé provenant d'une source extérieure
+AMT_ANNUITY,Annuité du crédit
+EXT_SOURCE_1,Score normalisé provenant d'une source extérieure
+REGION_POPULATION_RELATIVE,"Population de la région de résidence du client normalisé (plus le chiffre est grand, plus la région est peuplée)"
+CC_CNT_DRAWINGS_ATM_CURRENT_MEAN,Nombre moyen de retrait au guichet automatique par mois en période de crédit (dans le cas de précédents crédits)
+APPROVED_AMT_CREDIT_MAX,Montant du plus gros crédit accepté (dans le cas de précédents crédits)
+APPROVED_AMT_DOWN_PAYMENT_MAX,Montant du plus important acompte du client pour un précédent crédit accepté (dans le cas de précédents crédits)
+DAYS_BIRTH,Age du client en jour au moment de la demande de crédit
+AMT_GOODS_PRICE,Prix du bien pour lequel la demande de crédit a été faite
+INSTAL_PAYMENT_DIFF_MEAN,Différence moyenne entre versement prescris et paiement réel du client pour les précédents crédits (dans le cas de précédents crédits)
+BURO_DAYS_CREDIT_ENDDATE_MAX,Durée maximale restante des crédit CB au moment de la demande dans Home Credit (dans le cas de précédents crédits)
+INSTAL_AMT_PAYMENT_SUM,Somme des paiement du client pour les précédents crédits (dans le cas de précédents crédits)
+PREV_CNT_PAYMENT_MEAN,Durée moyenne entre la fin d'un crédit et la demande d'un nouveau crédit (dans le cas de précédents crédits)
+CLOSED_DAYS_CREDIT_MAX,Nombre de jours entre la demande du premier crédit du client (crédit entièrement remboursé) et la demande de ce crédit (dans le cas de précédents crédits)
+POS_MONTHS_BALANCE_MAX,Plus petite durée en mois entre la dernière information sur le reste à payer des crédits précédents (dans le cas de précédents crédits) et la date de la demande (0 équivaut au jour de la demande et -1 correspond à la dernière information disponible)
+PREV_NAME_YIELD_GROUP_high_MEAN,Ratio des crédits précédents qui ont un taux d'intérêt élevé (dans le cas de précédents crédits)
+INSTAL_DPD_MEAN,Moyenne de la durée des retards (en jour) sur les crédits précédents (dans le cas de précédents crédits)
+DAYS_EMPLOYED_PERC,Rapport entre le nombre de jours que le client occupe son emploi actuel et son âge (en jours)
+PREV_DAYS_DECISION_MEAN,Moyenne des durées entre la demande actuelle et l'accord (ou le refus) des crédits précédents (dans le cas de précédents crédits)
+ANNUITY_INCOME_PERC,Fraction des revenus globaux utilisée pour rembourser le crédit chaque année (ratio annuité sur revenus annuels)
+INSTAL_DBD_MEAN,Moyenne de la durée des remboursements en avance (en jour) sur les crédits précédents (dans le cas de précédents crédits)
+DEF_30_CNT_SOCIAL_CIRCLE,Combien de personnes de l'environnement social du client sont en défaut de plus de 30 jours sur leurs crédits
+ACTIVE_AMT_CREDIT_SUM_SUM,Montant total de tous les crédits dont le remboursement est en cours (dans le cas de précédents crédits)
+ACTIVE_DAYS_CREDIT_MEAN,Moyenne du nombre de jours entre cette demande et la demande de tous les crédits en cours de remboursement (dans le cas de précédents crédits)
+BURO_AMT_CREDIT_SUM_MAX,Montant maximum emprunté précédemment (dans le cas de précédents crédits)

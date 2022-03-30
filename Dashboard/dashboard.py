@@ -11,11 +11,14 @@ import json
 import streamlit as st
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 
 # Import model and datas
 df_test = pd.read_csv('data/X_test.csv', index_col='SK_ID_CURR')
 info_df = pd.read_csv('data/info.csv', index_col='SK_ID_CURR')
+gloss = pd.read_csv('data/gloss.csv', index_col='Unnamed: 0')
 infos = {'Montant du crédit':'AMT_CREDIT',
          'Montant des annuités':'AMT_ANNUITY',
          'Montant des biens concernés par le crédit':'AMT_GOODS_PRICE',
@@ -217,6 +220,107 @@ def dist_viz(data, id_credit, feature):
                 plt.legend(bbox_to_anchor=(1, 1), loc='upper left')
     return fig
 
+# Bivariate analysis visualization
+def bin_viz(data, id_credit, abscissa, ordinate):
+    # Definition of legend
+    scr1 = mlines.Line2D([], [], color=(0, 0, 0, 0), mec='g',
+                         marker='o', linestyle='None',
+                         markersize=5, label='score = 1', mew=2)
+    scr2 = mlines.Line2D([], [], color=(0, 0, 0, 0), mec='greenyellow',
+                         marker='o', linestyle='None',
+                         markersize=5, label='score = 2', mew=2)
+    scr3 = mlines.Line2D([], [], color=(0, 0, 0, 0), mec='navajowhite',
+                         marker='o', linestyle='None',
+                         markersize=5, label='score = 3', mew=2)
+    scr4 = mlines.Line2D([], [], color=(0, 0, 0, 0), mec='orange',
+                         marker='o', linestyle='None',
+                         markersize=5, label='score = 4', mew=2)
+    size_1 = mlines.Line2D([], [], color=(0, 0, 0, 0), mec='black',
+                         marker='o', linestyle='None', mew=2,
+                         markersize=5, label='nombre d\'observation = 1')
+    size_5 = mlines.Line2D([], [], color=(0, 0, 0, 0), mec='black',
+                         marker='o', linestyle='None', mew=2,
+                         markersize=10, label='nombre d\'observation = 5')
+    size_10 = mlines.Line2D([], [], color=(0, 0, 0, 0), mec='black',
+                         marker='o', linestyle='None', mew=2,
+                         markersize=15, label='nombre d\'observation = 10')
+    point = mlines.Line2D([], [], color=(0, 0, 0, 0), c='b', marker='+',
+                          linestyle='None',markersize=10,
+                          label='credit n°{id_credit}')
+
+    color = ['g', 'greenyellow', 'navajowhite', 'orange']
+    df = data[[abscissa, ordinate]].copy()
+    df['score'] = score_dis()['score']
+    df.dropna(inplace=True)
+    color = ['g', 'greenyellow', 'navajowhite', 'orange']
+
+    # Scatter plot with size in fonction of number of values
+    # for discrete features
+    if len(df[abscissa].unique()) < 10 and len(df[ordinate].unique()) < 10:
+        sizes = {}
+        for x, y, scr in zip(df[abscissa], df[ordinate], df['score']):
+          if (x, y, scr) in sizes:
+            sizes[(x, y, scr)] += 1
+          else:
+            sizes[(x, y, scr)] = 5
+        keys = sizes.keys()
+        fig = plt.figure()
+        plt.scatter(x=[k[0] for k in keys],
+                    y=[k[1] for k in keys],
+                    s=[sizes[k] for k in keys],
+                    c=[(0, 0, 0, 0) for _ in keys],
+                    ec=[color[k[2]-1] for k in keys],
+                    lw=2)
+        plt.title('Analyse bivariée\nVariables discrètes',
+                fontsize=16, fontweight=650)
+
+    # Boxplot when mixing a discrete and a continuous features
+    elif len(df[abscissa].unique()) < 10 and len(df[ordinate].unique()) >= 10:
+        fig = plt.figure()
+        sns.boxplot(data=df, x=abscissa, y=ordinate,
+                    orient='v', hue='score', palette=color)
+        plt.title('Analyse bivariée\nVariables discrète et continue',
+                  fontsize=16, fontweight=650)
+
+    elif len(df[abscissa].unique()) >= 10 and len(df[ordinate].unique()) < 10:
+        fig = plt.figure()
+        sns.boxplot(data=df, x=abscissa, y=ordinate,
+                    orient='h', hue='score', palette=color)
+        plt.title('Analyse bivariée\nVariables discrète et continue',
+                  fontsize=16, fontweight=650)
+
+    # Scatter plot for two continuous features
+    else:
+      sizes = {}
+      for x, y, scr in zip(df[abscissa], df[ordinate], df['score']):
+        if (x, y, scr) in sizes:
+          sizes[(x, y, scr)] += 1
+        else:
+          sizes[(x, y, scr)] = 5
+      keys = sizes.keys()
+      fig = plt.figure()
+      plt.scatter(x=[k[0] for k in keys],
+                  y=[k[1] for k in keys],
+                  s=[sizes[k] for k in keys],
+                  c=[(0, 0, 0, 0) for _ in keys],
+                  ec=[color[k[2]-1] for k in keys],
+                  lw=2)
+      plt.title('Analyse bivariée\nVariables continues',
+                fontsize=16, fontweight=650)
+
+    if id_credit in df.index:
+        plt.axvline(x=df.loc[id_credit, abscissa], ymin=0, ymax=1, color='b')
+        plt.axhline(y=df.loc[id_credit, ordinate], xmin=0, xmax=1, color='b')
+    plt.ylabel(ordinate, fontsize=14)
+    plt.xlabel(abscissa, fontsize=14)
+    plt.legend(handles=[scr1, scr2, scr3, scr4,
+                        size_1, size_5, size_10,
+                        point],
+               bbox_to_anchor=(1, 1), loc='upper left')
+    
+    return fig
+
+
 # Construction of the Dashboard
 # Title
 st.image('Images/Titre.png', use_column_width='always')
@@ -239,6 +343,10 @@ st.sidebar.table(info_df.astype(str).loc[id_client,
 analyse = st.sidebar.radio('Analyse',
                            ['Modification valeurs', 'Analyse global',
                             'Analyse locale', 'Analyse bivariée'])
+
+st.sidebar.markdown('#')
+feat_gloss = st.sidebar.selectbox('Glossaire des variables', gloss.index)
+st.sidebar.markdown(gloss.loc[feat_gloss, 'description'])
 
 # Visualisation of scoring results
 st.header('Résultat de la simulation')
@@ -321,3 +429,20 @@ if analyse == 'Analyse locale':
                    id_credit=id_client,
                    feature=local_imp['feat_neg_2'])
     col2.pyplot(fig)
+
+# Visualize sample distribution in a scatter plot allowing bivariate analysis
+if analyse == 'Analyse bivariée':
+    st.header('Analyse bivariée:')
+    col1, col2 = st.columns(2)
+    absc = col1.selectbox('Abscisse',
+                          df_test.columns)
+    ordo = col2.selectbox('Ordonnée',
+                          df_test.columns)
+    
+    if absc == ordo:
+        fig = dist_viz(data=df_test, id_credit=id_client, feature=absc)
+        st.pyplot(fig)
+    else:
+        fig = bin_viz(data=df_test, id_credit=id_client,
+                      abscissa=absc, ordinate=ordo)
+        st.pyplot(fig)

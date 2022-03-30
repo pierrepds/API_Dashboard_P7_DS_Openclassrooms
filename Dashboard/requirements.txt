@@ -5,3 +5,4 @@ pandas==1.4.1
 requests==2.27.1
 shap==0.40.0
 streamlit==1.8.0
+seaborn==0.11.2
