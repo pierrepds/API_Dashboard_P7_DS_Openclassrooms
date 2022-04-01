@@ -396,7 +396,7 @@ if analyse == 'Analyse locale':
     col1, col2 = st.columns(2)
     col1.markdown('Cause du refus n°1: {}'
                  ''.format(local_imp['feat_pos_1']))
-    col1.markdown('Proportion de la variable dans le refus: {}%'
+    col1.markdown('Proportion de la variable dans la décision: {}%'
                  ''.format(round(local_imp['ratio_pos_1']*100, 1)))
     fig = dist_viz(data=df_test,
                    id_credit=id_client,
@@ -404,7 +404,7 @@ if analyse == 'Analyse locale':
     col1.pyplot(fig)
     col2.markdown('Cause du refus n°2: {}'
                  ''.format(local_imp['feat_pos_2']))
-    col2.markdown('Proportion de la variable dans le refus: {}%'
+    col2.markdown('Proportion de la variable dans la décision: {}%'
                  ''.format(round(local_imp['ratio_pos_2']*100, 1)))
     fig = dist_viz(data=df_test,
                    id_credit=id_client,
@@ -415,7 +415,7 @@ if analyse == 'Analyse locale':
     col1, col2 = st.columns(2)
     col1.markdown('Cause d\'accord n°1: {}'
                  ''.format(local_imp['feat_neg_1']))
-    col1.markdown('Proportion de la variable dans l\'accord: {}%'
+    col1.markdown('Proportion de la variable dans la décision: {}%'
                  ''.format(round(local_imp['ratio_neg_1']*100, 1)))
     fig = dist_viz(data=df_test,
                    id_credit=id_client,
@@ -423,7 +423,7 @@ if analyse == 'Analyse locale':
     col1.pyplot(fig)
     col2.markdown('Cause d\'accord n°2: {}'
                  ''.format(local_imp['feat_neg_2']))
-    col2.markdown('Proportion de la variable dans l\'accord: {}%'
+    col2.markdown('Proportion de la variable dans la décision: {}%'
                  ''.format(round(local_imp['ratio_neg_2']*100, 1)))
     fig = dist_viz(data=df_test,
                    id_credit=id_client,
