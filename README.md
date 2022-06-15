@@ -17,7 +17,7 @@ Le modèle de prédiction se base sur la base de données référence d'une comp
 dont le but était la prédiction de défauts sur un jeu test à partir d'informations variées.<br />
 <br />
 Pour une utilisation du notebook en local, les fichiers ".csv" disponible sur la page de la competition Kaggle doivent être 
-préalablement télécharger dans un dossier "Input" qui se trouvera dans le même dossier que le notebbok.<br />
+préalablement télécharger dans un dossier "Input" qui se trouvera dans le même dossier que le notebook.<br />
 <br />
 Le prétraitement est issue du kernel kaggle: [LightGBM with Simple Features](https://www.kaggle.com/code/jsaguiar/lightgbm-with-simple-features/script)
 
